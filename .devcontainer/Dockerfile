@@ -25,7 +25,13 @@ ENV SHELL /bin/bash
 
 RUN apt-get update && apt-get install -y \
     ros-humble-desktop-full \
-    ros-dev-tools
+    ros-dev-tools \
+    bash-completion \
+    git
+
+# Enable bash completion for all users
+RUN echo ". /etc/bash_completion" >> /etc/bash.bashrc
+RUN echo "source /usr/share/bash-completion/completions/apt" >> /etc/bash.bashrc
 
 # [Optional] Set the default user. Omit if you want to keep the default as root.
 USER $USERNAME

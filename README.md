@@ -40,6 +40,7 @@ git submodule update --init --recursive
 If you are making changes to the source or want to build from source, you can build the workspace inside the devcontainer:
 
 ```sh
+source /opt/ros/humble/setup.bash
 colcon build --symlink-install
 ```
 
@@ -86,6 +87,7 @@ sudo apt update && sudo apt install ros-humble-teleop-twist-keyboard
 Open a new terminal (make sure your ROS 2 environment is sourced):
 
 ```sh
+source install/setup.bash
 ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r /cmd_vel:=/cmd_vel
 ```
 
@@ -103,6 +105,8 @@ You can generate a map of your simulated environment using SLAM (Simultaneous Lo
 Start the simulator with SLAM, Nav2, and RViz enabled:
 
 ```sh
+source /opt/ros/humble/setup.bash
+source install/setup.bash
 ros2 launch turtlebot4_ignition_bringup turtlebot4_ignition.launch.py slam:=true nav2:=true rviz:=true
 ```
 
@@ -119,6 +123,8 @@ ros2 launch turtlebot4_ignition_bringup turtlebot4_ignition.launch.py slam:=true
 Once you are satisfied with the map, save it using the following command in a new terminal (make sure your ROS 2 environment is sourced):
 
 ```sh
+source /opt/ros/humble/setup.bash
+source install/setup.bash
 ros2 service call /slam_toolbox/save_map slam_toolbox/srv/SaveMap "name:
   data: 'map_name'"
 ```
@@ -128,6 +134,8 @@ ros2 service call /slam_toolbox/save_map slam_toolbox/srv/SaveMap "name:
 **Tip:** If you are using namespaces, you may need to call the map saver tool directly:
 
 ```sh
+source /opt/ros/humble/setup.bash
+source install/setup.bash
 ros2 run nav2_map_server map_saver_cli -f "map_name" --ros-args -p map_subscribe_transient_local:=true -r __ns:=/namespace
 ```
 
@@ -136,6 +144,48 @@ ros2 run nav2_map_server map_saver_cli -f "map_name" --ros-args -p map_subscribe
 - You can now use this saved map for navigation by launching the simulator with localization and Nav2, passing your map as a parameter.
 
 For more details, see the [official mapping tutorial](https://turtlebot.github.io/turtlebot4-user-manual/tutorials/generate_map.html).
+
+### Navigating the Robot with a Saved Map (Localization & Nav2)
+
+Once you have generated and saved a map, you can use it to autonomously navigate the robot using the Nav2 stack. This process uses localization (not SLAM) to determine the robot's position on the map and plan paths to goals.
+
+#### 1. Launch the Simulator with Localization and Nav2
+
+Start the simulator, enabling Nav2 and localization, and pass your saved map as a parameter. Replace `map_name.yaml` with the path to your saved map file:
+
+```sh
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+ros2 launch turtlebot4_ignition_bringup turtlebot4_ignition.launch.py nav2:=true slam:=false localization:=true rviz:=true map:=/absolute/path/to/map_name.yaml
+```
+
+- This will bring up the simulator, start localization and Nav2, and open RViz for visualization.
+- If you want to use a specific world, add the `world:=your_world` argument.
+
+#### 2. Set the Initial Pose in RViz
+
+Before sending navigation goals, you must set the robot's initial pose on the map:
+- In the RViz window, select the **2D Pose Estimate** tool (usually an icon with an arrow).
+- Click and drag on the map to indicate the robot's approximate starting position and orientation.
+
+#### 3. Send Navigation Goals
+
+- Use the **Nav2 Goal** tool in RViz (icon with an arrow and a flag) to click and drag on the map where you want the robot to go.
+- The robot will plan a path and attempt to drive to the goal.
+
+#### 4. (Optional) Echo Clicked Points
+
+You can use the **Publish Point** tool in RViz to publish coordinates to the `/clicked_point` topic. To see these points in the terminal:
+
+```sh
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+ros2 topic echo /clicked_point
+```
+
+#### More Information
+
+For more details and advanced options (such as using custom worlds or multiple robots), see the [official TurtleBot 4 navigation tutorial](https://turtlebot.github.io/turtlebot4-user-manual/tutorials/navigation.html).
 
 ## Index
 
