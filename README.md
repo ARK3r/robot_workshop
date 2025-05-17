@@ -25,7 +25,117 @@ Then open this folder in vscode, and a pop up for opening the workspace in a dev
 
 This will download and install a bunch of packages needed for what we want to do.
 
+## Bring up
 
+### 1. Get the submodules
+
+If you haven't already, make sure to initialize and update the git submodules. This will pull in the TurtleBot 4 simulator source code:
+
+```sh
+git submodule update --init --recursive
+```
+
+### 2. Build the workspace (if needed)
+
+If you are making changes to the source or want to build from source, you can build the workspace inside the devcontainer:
+
+```sh
+colcon build --symlink-install
+```
+
+### 3. Source the workspace
+
+After building, source the workspace so ROS 2 can find the packages:
+
+```sh
+source install/setup.bash
+```
+
+### 4. Launch the TurtleBot 4 Simulator with Gazebo and RViz
+
+You can follow the official [TurtleBot 4 Simulator tutorial](https://turtlebot.github.io/turtlebot4-user-manual/software/turtlebot4_simulator.html) for more details and options.
+
+To launch the simulator with default settings (Gazebo + TurtleBot 4):
+
+```sh
+ros2 launch turtlebot4_ignition_bringup turtlebot4_ignition.launch.py
+```
+
+To launch with RViz:
+
+```sh
+ros2 launch turtlebot4_ignition_bringup turtlebot4_ignition.launch.py rviz:=true
+```
+
+You can customize the launch with additional arguments (see the [official documentation](https://turtlebot.github.io/turtlebot4-user-manual/software/turtlebot4_simulator.html) for all options).
+
+### Driving the Robot with the Keyboard
+
+You can drive the TurtleBot 4 around the simulated environment using your keyboard. This is done with the `teleop_twist_keyboard` ROS 2 package, which sends velocity commands to the robot.
+
+**1. Install teleop_twist_keyboard (if not already installed):**
+
+If you are in the devcontainer, this package may already be installed. If not, you can install it with:
+
+```sh
+sudo apt update && sudo apt install ros-humble-teleop-twist-keyboard
+```
+
+**2. Run teleop_twist_keyboard:**
+
+Open a new terminal (make sure your ROS 2 environment is sourced):
+
+```sh
+ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r /cmd_vel:=/cmd_vel
+```
+
+- Use the on-screen instructions to drive the robot with your keyboard (WASD keys for movement).
+- Make sure the simulator is running before starting teleop.
+
+You can also use the built-in GUI teleop panel in the simulator if you prefer a graphical interface.
+
+## Generating a Map for Navigation (SLAM in Simulation)
+
+You can generate a map of your simulated environment using SLAM (Simultaneous Localization and Mapping) and save it for later use with navigation. This is useful for autonomous navigation tasks.
+
+### 1. Launch the Simulator with SLAM and RViz
+
+Start the simulator with SLAM, Nav2, and RViz enabled:
+
+```sh
+ros2 launch turtlebot4_ignition_bringup turtlebot4_ignition.launch.py slam:=true nav2:=true rviz:=true
+```
+
+- This will bring up the simulator, start SLAM mapping, and open RViz for visualization.
+
+### 2. Drive the Robot to Map the Environment
+
+- Use the teleoperation tools (keyboard, joystick, or GUI) to drive the TurtleBot 4 around the environment.
+- Watch RViz to see the map being built in real time.
+- Try to cover all areas you want included in the map.
+
+### 3. Save the Map
+
+Once you are satisfied with the map, save it using the following command in a new terminal (make sure your ROS 2 environment is sourced):
+
+```sh
+ros2 service call /slam_toolbox/save_map slam_toolbox/srv/SaveMap "name:
+  data: 'map_name'"
+```
+
+- This will save `map_name.pgm` and `map_name.yaml` in your current directory.
+
+**Tip:** If you are using namespaces, you may need to call the map saver tool directly:
+
+```sh
+ros2 run nav2_map_server map_saver_cli -f "map_name" --ros-args -p map_subscribe_transient_local:=true -r __ns:=/namespace
+```
+
+### 4. Use the Map for Navigation
+
+- You can now use this saved map for navigation by launching the simulator with localization and Nav2, passing your map as a parameter.
+
+For more details, see the [official mapping tutorial](https://turtlebot.github.io/turtlebot4-user-manual/tutorials/generate_map.html).
 
 ## Index
 
